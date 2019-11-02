@@ -1,11 +1,9 @@
 import multiprocessing
 from time import time
-
 import socket
-
+import zmq
 from rtgraph.core.constants import Constants
 from rtgraph.common.logger import Logger as Log
-
 
 TAG = "Socket"
 
@@ -14,6 +12,7 @@ class SocketProcess(multiprocessing.Process):
     """
     Socket client
     """
+
     def __init__(self, parser_process):
         """
         Initialises values for process.
@@ -26,7 +25,7 @@ class SocketProcess(multiprocessing.Process):
         self._socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         Log.i(TAG, "Process Ready")
 
-    def open(self, port='', speed=5555, timeout=0.01):
+    def open(self, port='', speed=45454, timeout=0.01):
         """
         Opens a socket connection to specified host and port
         :param port: Host address to connect to.
@@ -59,7 +58,8 @@ class SocketProcess(multiprocessing.Process):
         while not self._exit.is_set():
             stamp = time() - timestamp
             try:
-                data = self._socket_client.recv(Constants.SocketClient.buffer_recv_size).decode()
+                data = self._socket_client.recv(
+                    Constants.SocketClient.buffer_recv_size).decode()
                 if len(data) > 0:
                     self._parser.add([stamp, data])
             except socket.timeout:
@@ -81,7 +81,12 @@ class SocketProcess(multiprocessing.Process):
         Returns a list of local host names, localhost, host name and local ip address, if available.
         :return: str list.
         """
-        values = socket.gethostbyaddr(socket.gethostname())
+        try:
+            values = socket.gethostbyaddr(
+                socket.gethostbyname(socket.gethostname()))
+        except socket.herror:
+            values = (None, None, None)
+
         hostname = values[0]
         hostip = values[2][0]
 

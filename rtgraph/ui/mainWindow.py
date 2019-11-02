@@ -1,10 +1,9 @@
 from rtgraph.ui.mainWindow_ui import *
-
+import cProfile
 from rtgraph.core.worker import Worker
 from rtgraph.core.constants import Constants, SourceType
 from rtgraph.ui.popUp import PopUp
 from rtgraph.common.logger import Logger as Log
-
 
 TAG = "MainWindow"
 
@@ -40,7 +39,7 @@ class MainWindow(QtGui.QMainWindow):
 
         # populate combo box for serial ports
         self._source_changed()
-        self.ui.cBox_Source.setCurrentIndex(SourceType.serial.value)
+        self.ui.cBox_Source.setCurrentIndex(SourceType.SocketServer.value)
 
         self.ui.sBox_Samples.setValue(samples)
 
@@ -64,8 +63,10 @@ class MainWindow(QtGui.QMainWindow):
             self._enable_ui(False)
         else:
             Log.i(TAG, "Port is not available")
-            PopUp.warning(self, Constants.app_title, "Selected port \"{}\" is not available"
-                          .format(self.ui.cBox_Port.currentText()))
+            PopUp.warning(
+                self, Constants.app_title,
+                "Selected port \"{}\" is not available".format(
+                    self.ui.cBox_Port.currentText()))
 
     def stop(self):
         """
@@ -111,7 +112,8 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.plt.setBackground(background=None)
         self.ui.plt.setAntialiasing(True)
         self._plt = self.ui.plt.addPlot(row=1, col=1)
-        self._plt.setLabel('bottom', Constants.plot_xlabel_title, Constants.plot_xlabel_unit)
+        self._plt.setLabel('bottom', Constants.plot_xlabel_title,
+                           Constants.plot_xlabel_unit)
 
     def _configure_timers(self):
         """
@@ -144,9 +146,10 @@ class MainWindow(QtGui.QMainWindow):
     def _update_plot(self):
         """
         Updates and redraws the graphics in the plot.
-        This function us connected to the timeout signal of a QTimer.
+        This function is connected to the timeout signal of a QTimer.
         :return:
         """
+
         self.worker.consume_queue()
 
         # plot data

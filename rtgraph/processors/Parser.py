@@ -1,9 +1,8 @@
 import multiprocessing
 from time import sleep
-
+import json
 from rtgraph.core.constants import Constants
 from rtgraph.common.logger import Logger as Log
-
 
 TAG = "Parser"
 
@@ -12,7 +11,9 @@ class ParserProcess(multiprocessing.Process):
     """
     Process to parse incoming data, parse it, and then distribute it to graph and storage.
     """
-    def __init__(self, data_queue, store_reference=None,
+    def __init__(self,
+                 data_queue,
+                 store_reference=None,
                  split=Constants.csv_delimiter,
                  consumer_timeout=Constants.parser_timeout_ms):
         """
@@ -33,6 +34,7 @@ class ParserProcess(multiprocessing.Process):
         self._consumer_timeout = consumer_timeout
         self._split = split
         self._store_reference = store_reference
+        self._leftover = ''
         Log.d(TAG, "Process ready")
 
     def add(self, txt):
@@ -74,9 +76,9 @@ class ParserProcess(multiprocessing.Process):
         """
         while not self._in_queue.empty():
             queue = self._in_queue.get(timeout=self._consumer_timeout)
-            self._parse_csv(queue[0], queue[1])
+            self._parse_queue(queue)
 
-    def _parse_csv(self, time, line):
+    def _parse_queue(self, queue):
         """
         Parses incoming data and distributes to external processes.
         :param time: Timestamp.
@@ -85,21 +87,34 @@ class ParserProcess(multiprocessing.Process):
         :type line: basestring.
         :return:
         """
-        if len(line) > 0:
+        # list of possible stringified lists, might be split across stream
+        data = queue.split("\n")
+        if len(self._leftover) > 0:
+            data[0] = self._leftover + data[0]
+            print("recombined")
+        for datum in data:
             try:
-                if type(line) == bytes:
-                    values = line.decode("UTF-8").split(self._split)
-                elif type(line) == str:
-                    values = line.split(self._split)
-                else:
-                    raise TypeError
-                values = [float(v) for v in values]
-                Log.d(TAG, values)
-                self._out_queue.put((time, values))
+                datapoint = json.loads(datum)
+                self._out_queue.put((datapoint[0], datapoint[1]))
                 if self._store_reference is not None:
-                    self._store_reference.add(time, values)
-            except ValueError:
-                Log.w(TAG, "Can't convert to float. Raw: {}".format(line.strip()))
-            except AttributeError:
-                Log.w(TAG, "Attribute error on type ({}). Raw: {}".format(type(line), line.strip()))
-
+                    self._store_reference.add(datapoint[0], datapoint[1])
+            except json.decoder.JSONDecodeError:
+                self._leftover = datum
+                # print("split datum:", datum)
+            # if len(line) > 0:
+            #     try:
+            #         if type(line) == bytes:
+            #             values = line.decode("UTF-8").split(self._split)
+            #         elif type(line) == str:
+            #             values = line.split(self._split)
+            #         else:
+            #             raise TypeError
+            #         values = [float(v) for v in values if len(v) > 0]
+            #         Log.d(TAG, values)
+            # except ValueError:
+            #     Log.w(TAG,
+            #           "Can't convert to float. Raw: {}".format(line.strip()))
+            # except AttributeError:
+            #     Log.w(
+            #         TAG, "Attribute error on type ({}). Raw: {}".format(
+            #             type(line), line.strip()))

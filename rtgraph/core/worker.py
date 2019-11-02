@@ -1,14 +1,13 @@
-from multiprocessing import Queue
+from multiprocessing import Manager, Queue
 
 from rtgraph.core.constants import Constants, SourceType
 from rtgraph.core.ringBuffer import RingBuffer
 from rtgraph.processors.Csv import CSVProcess
 from rtgraph.processors.Parser import ParserProcess
 from rtgraph.processors.Serial import SerialProcess
-from rtgraph.processors.SocketClient import SocketProcess
+from rtgraph.processors.SocketServer import SocketProcess
 from rtgraph.processors.Simulator import SimulatorProcess
 from rtgraph.common.logger import Logger as Log
-
 
 TAG = "Worker"
 
@@ -39,11 +38,12 @@ class Worker:
         :param export_path: If specified, defines where the data will be exported.
         :type export_path: str.
         """
-        self._queue = Queue()
+
+        # NOTE: tried adding Manager to speed up Queue... not much difference
+        self._queue = Manager().Queue()
         self._data_buffers = None
         self._time_buffer = None
         self._lines = 0
-
         self._acquisition_process = None
         self._parser_process = None
         self._csv_process = None
@@ -63,7 +63,8 @@ class Worker:
         self.reset_buffers(self._samples)
         if self._export:
             self._csv_process = CSVProcess(path=self._path)
-            self._parser_process = ParserProcess(self._queue, store_reference=self._csv_process)
+            self._parser_process = ParserProcess(
+                self._queue, store_reference=self._csv_process)
         else:
             self._parser_process = ParserProcess(self._queue)
 
@@ -71,13 +72,15 @@ class Worker:
             self._acquisition_process = SerialProcess(self._parser_process)
         elif self._source == SourceType.simulator:
             self._acquisition_process = SimulatorProcess(self._parser_process)
-        elif self._source == SourceType.SocketClient:
+        elif self._source == SourceType.SocketServer:
             self._acquisition_process = SocketProcess(self._parser_process)
-        if self._acquisition_process.open(port=self._port, speed=self._speed):
+
+        if self._acquisition_process.open():
             self._parser_process.start()
             if self._export:
                 self._csv_process.start()
             self._acquisition_process.start()
+            Log.i(TAG, "Processes started")
             return True
         else:
             Log.i(TAG, "Port is not available")
@@ -89,7 +92,10 @@ class Worker:
         :return:
         """
         self.consume_queue()
-        for process in [self._acquisition_process, self._parser_process, self._csv_process]:
+        for process in [
+                self._acquisition_process, self._parser_process,
+                self._csv_process
+        ]:
             if process is not None and process.is_alive():
                 process.stop()
                 process.join(Constants.process_join_timeout_ms)
@@ -99,8 +105,11 @@ class Worker:
         Empties the internal queue, updating data to consumers.
         :return:
         """
+        i = 0
         while not self._queue.empty():
+            i += 1
             self._store_data(self._queue.get(False))
+        print('queue len', i)
 
     def _store_data(self, data):
         """
@@ -125,12 +134,15 @@ class Worker:
         size = len(values)
         if self._lines < size:
             if size > Constants.plot_max_lines:
+                print("oversize: ", size)
                 self._lines = Constants.plot_max_lines
             else:
                 self._lines = size
 
         # store the data in respective buffers
+        # NOTE: these buffers appear to be SLOW
         for idx in range(self._lines):
+            # this truncates the data
             self._data_buffers[idx].append(values[idx])
 
     def get_time_buffer(self):
@@ -164,7 +176,8 @@ class Worker:
         :return: True if a process is running.
         :rtype: bool.
         """
-        return self._acquisition_process is not None and self._acquisition_process.is_alive()
+        return self._acquisition_process is not None and self._acquisition_process.is_alive(
+        )
 
     @staticmethod
     def get_source_ports(source):
@@ -179,7 +192,7 @@ class Worker:
             return SerialProcess.get_ports()
         elif source == SourceType.simulator:
             return SimulatorProcess.get_ports()
-        elif source == SourceType.SocketClient:
+        elif source == SourceType.SocketServer:
             return SocketProcess.get_default_host()
         else:
             Log.w(TAG, "Unknown source selected")
@@ -198,7 +211,7 @@ class Worker:
             return SerialProcess.get_speeds()
         elif source == SourceType.simulator:
             return SimulatorProcess.get_speeds()
-        elif source == SourceType.SocketClient:
+        elif source == SourceType.SocketServer:
             return SocketProcess.get_default_port()
         else:
             Log.w(TAG, "Unknown source selected")

@@ -1,5 +1,4 @@
 import numpy as np
-
 """
 http://code.activestate.com/recipes/68429-ring-buffer/
 http://stackoverflow.com/questions/4151320/efficient-circular-buffer
