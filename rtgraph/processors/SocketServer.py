@@ -68,7 +68,7 @@ class SocketProcess(multiprocessing.Process):
                 packet = self._conn.recv(
                     Constants.SocketServer.buffer_recv_size).decode()
                 if len(packet) > 0:
-                    # print("len packet: ", len(packet))
+                    # executed by the other process?
                     self._parser.add(packet)
                 else:  # client no longer sending data
                     Log.w(TAG, "No incoming data")

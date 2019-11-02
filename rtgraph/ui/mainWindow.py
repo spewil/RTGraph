@@ -31,6 +31,9 @@ class MainWindow(QtGui.QMainWindow):
         self._timer_plot = None
         self.worker = Worker()
 
+        # plotting
+        self.curves = []
+
         # configures
         self.ui.cBox_Source.addItems(Constants.app_sources)
         self._configure_plot()
@@ -114,6 +117,7 @@ class MainWindow(QtGui.QMainWindow):
         self._plt = self.ui.plt.addPlot(row=1, col=1)
         self._plt.setLabel('bottom', Constants.plot_xlabel_title,
                            Constants.plot_xlabel_unit)
+        # self._plt.setXRange(-10, 0)
 
     def _configure_timers(self):
         """

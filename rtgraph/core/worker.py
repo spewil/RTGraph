@@ -1,5 +1,5 @@
-from multiprocessing import Manager, Queue
-
+import multiprocessing as mp
+import queue
 from rtgraph.core.constants import Constants, SourceType
 from rtgraph.core.ringBuffer import RingBuffer
 from rtgraph.processors.Csv import CSVProcess
@@ -39,8 +39,7 @@ class Worker:
         :type export_path: str.
         """
 
-        # NOTE: tried adding Manager to speed up Queue... not much difference
-        self._queue = Manager().Queue()
+        self._queue = mp.Queue()
         self._data_buffers = None
         self._time_buffer = None
         self._lines = 0
@@ -106,10 +105,13 @@ class Worker:
         :return:
         """
         i = 0
-        while not self._queue.empty():
-            i += 1
-            self._store_data(self._queue.get(False))
-        print('queue len', i)
+        while True:
+            try:
+                self._store_data(self._queue.get(block=False))
+                i += 1
+            except queue.Empty:
+                return
+        Log.d(TAG, f"queue len: {i}")
 
     def _store_data(self, data):
         """

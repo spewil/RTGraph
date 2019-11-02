@@ -1,4 +1,5 @@
-import multiprocessing
+import multiprocessing as mp
+import queue
 from time import sleep
 import json
 from rtgraph.core.constants import Constants
@@ -7,7 +8,7 @@ from rtgraph.common.logger import Logger as Log
 TAG = "Parser"
 
 
-class ParserProcess(multiprocessing.Process):
+class ParserProcess(mp.Process):
     """
     Process to parse incoming data, parse it, and then distribute it to graph and storage.
     """
@@ -27,10 +28,10 @@ class ParserProcess(multiprocessing.Process):
         :param consumer_timeout: Time to wait after emptying the internal buffer before next parsing.
         :type consumer_timeout: float.
         """
-        multiprocessing.Process.__init__(self)
-        self._exit = multiprocessing.Event()
-        self._in_queue = multiprocessing.Queue()
-        self._out_queue = data_queue
+        mp.Process.__init__(self)
+        self._exit = mp.Event()
+        self._in_queue = mp.Queue()
+        self._out_queue = data_queue  # Queue from the worker process
         self._consumer_timeout = consumer_timeout
         self._split = split
         self._store_reference = store_reference
@@ -55,7 +56,7 @@ class ParserProcess(multiprocessing.Process):
         Log.d(TAG, "Process starting...")
         while not self._exit.is_set():
             self._consume_queue()
-            sleep(self._consumer_timeout)
+            # sleep(self._consumer_timeout)
         # last check on the queue to completely remove data.
         self._consume_queue()
         Log.d(TAG, "Process finished")
@@ -74,11 +75,15 @@ class ParserProcess(multiprocessing.Process):
         Used in run method to recall after a stop is requested, to ensure queue is emptied.
         :return:
         """
-        while not self._in_queue.empty():
-            queue = self._in_queue.get(timeout=self._consumer_timeout)
-            self._parse_queue(queue)
+        while True:  #not self._in_queue.empty():
+            try:
+                packet = self._in_queue.get(block=False)
+                #    ,timeout=self._consumer_timeout)
+                self._parse_queue(packet)
+            except queue.Empty:
+                return
 
-    def _parse_queue(self, queue):
+    def _parse_queue(self, packet):
         """
         Parses incoming data and distributes to external processes.
         :param time: Timestamp.
@@ -88,7 +93,7 @@ class ParserProcess(multiprocessing.Process):
         :return:
         """
         # list of possible stringified lists, might be split across stream
-        data = queue.split("\n")
+        data = packet.split("\n")
         if len(self._leftover) > 0:
             data[0] = self._leftover + data[0]
             print("recombined")
