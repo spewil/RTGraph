@@ -4,7 +4,6 @@ from time import time
 import socket
 from rtgraph.core.constants import Constants
 from rtgraph.common.logger import Logger as Log
-import zmq
 
 TAG = "Socket"
 

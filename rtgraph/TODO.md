@@ -21,6 +21,14 @@ TODO
     - user writes acquisition device subclass 
 
 
+<!-- RingBuffer -->
+- Changing this to a deque for some speedup 
+
+<!-- Multiprocessing.Queue -->
+- this seems to be slow, moving data across processes
+- Can we subscribe multiple processes to the incoming stream instead? 
+    - Use a 
+
 <!-- NOTES -->
 vSignals acquired with sessantaquattro can be read with a WiFi interface using a TCP connection.
 A TCP socket have to be opened by the computer (or tablet, smartphone) running OT BioLab or other custom application.
