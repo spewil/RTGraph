@@ -27,7 +27,20 @@ TODO
 <!-- Multiprocessing.Queue -->
 - this seems to be slow, moving data across processes
 - Can we subscribe multiple processes to the incoming stream instead? 
-    - Use a 
+    - No... 
+- fastest inter-process communication?
+    - https://github.com/MagicStack/uvloop 
+    - https://github.com/zeromq/pyzmq 
+    - Seems that these things are hard to check
+        - variables = message size, message type (serializing is slow)
+    - conclusion: stick with Queue for now, it's the right abstraction... 
+    - future problem: might need multiple queues for 
+
+<!-- PLotting speedup ideas -->
+- biggest time hogs:
+    - auto-adjusting the range (requires calculations)
+    - clearing and replotting the entire graph (clear + plot)
+        - can we keep most of the plot intact? 
 
 <!-- NOTES -->
 vSignals acquired with sessantaquattro can be read with a WiFi interface using a TCP connection.

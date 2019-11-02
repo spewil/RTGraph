@@ -21,7 +21,7 @@ class Constants:
     app_sources = ["SocketServer", "SocketClient", "Serial", "Simulator"]
     app_encoding = "utf-8"
 
-    plot_update_ms = 16  # 30Hz
+    plot_update_ms = 8  # 60Hz
     plot_xlabel_title = "Time"
     plot_xlabel_unit = "s"
     plot_colors = [

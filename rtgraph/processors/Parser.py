@@ -100,21 +100,3 @@ class ParserProcess(multiprocessing.Process):
                     self._store_reference.add(datapoint[0], datapoint[1])
             except json.decoder.JSONDecodeError:
                 self._leftover = datum
-                # print("split datum:", datum)
-            # if len(line) > 0:
-            #     try:
-            #         if type(line) == bytes:
-            #             values = line.decode("UTF-8").split(self._split)
-            #         elif type(line) == str:
-            #             values = line.split(self._split)
-            #         else:
-            #             raise TypeError
-            #         values = [float(v) for v in values if len(v) > 0]
-            #         Log.d(TAG, values)
-            # except ValueError:
-            #     Log.w(TAG,
-            #           "Can't convert to float. Raw: {}".format(line.strip()))
-            # except AttributeError:
-            #     Log.w(
-            #         TAG, "Attribute error on type ({}). Raw: {}".format(
-            #             type(line), line.strip()))
