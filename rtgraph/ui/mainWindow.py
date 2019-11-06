@@ -6,20 +6,23 @@ from rtgraph.ui.popUp import PopUp
 from rtgraph.common.logger import Logger as Log
 
 TAG = "MainWindow"
+FREQ = 2000  #Hz
+TIME = 10  #secs
 
 
+# samples = FREQ*TIME
 class MainWindow(QtGui.QMainWindow):
     """
     Handles the ui elements and connects to worker service to execute processes.
     """
-    def __init__(self, port=None, bd=115200, samples=500):
+    def __init__(self, port=None, bd=115200, samples=FREQ * TIME):
         """
         Initializes values for the UI.
         :param port: Default port name to be used. It will also disable scanning available ports.
         :type port: str.
         :param bd: Default baud rate to be used. It will be added to the common baud rate list if not available.
         :type bd: int.
-        :param samples: Default samples per second to be shown in the plot.
+        :param samples:  # Default samples per second to be shown in the plot.
         :type samples: int.
         """
         QtGui.QMainWindow.__init__(self)
@@ -117,7 +120,14 @@ class MainWindow(QtGui.QMainWindow):
         self._plt = self.ui.plt.addPlot(row=1, col=1)
         self._plt.setLabel('bottom', Constants.plot_xlabel_title,
                            Constants.plot_xlabel_unit)
-        # self._plt.setXRange(-10, 0)
+
+        # TODO: make previous time an option
+        # this is in seconds, take sample freq into account
+        self._plt.setXRange(-TIME, 0)
+        self._plt.setYRange(0, Constants.plot_y_max)
+        self._lines = []
+        for i in range(Constants.default_num_lines):
+            self._lines.append(self._plt.plot())
 
     def _configure_timers(self):
         """
@@ -155,13 +165,15 @@ class MainWindow(QtGui.QMainWindow):
         """
 
         self.worker.consume_queue()
-
+        time = self.worker.get_time_buffer()
+        last_time = time[0]
+        time = [t - last_time for t in time]
         # plot data
-        self._plt.clear()
-        for idx in range(self.worker.get_lines()):
-            self._plt.plot(x=self.worker.get_time_buffer(),
-                           y=self.worker.get_values_buffer(idx),
-                           pen=Constants.plot_colors[idx])
+        for idx in range(Constants.default_num_lines):
+            data = self.worker.get_values_buffer(idx)
+            self._lines[idx].setData(x=time,
+                                     y=data,
+                                     pen=Constants.plot_colors[idx])
 
     def _source_changed(self):
         """

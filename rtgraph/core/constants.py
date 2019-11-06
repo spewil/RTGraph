@@ -39,9 +39,18 @@ class Constants:
     ]
     plot_max_lines = len(plot_colors)
 
+    # how do we agree on this?
+    default_num_lines = 64
+
+    # starting value for the y range of the plot
+    # change this if actual data deviates?
+    plot_y_max = 100
+
     process_join_timeout_ms = 1000
 
-    argument_default_samples = 500
+    default_freq = 2000  # Hz
+    default_time = 10  # secs
+    argument_default_samples = default_freq * default_time
 
     serial_default_speed = 115200
     serial_timeout_ms = 0.5

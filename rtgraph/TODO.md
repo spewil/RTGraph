@@ -16,13 +16,24 @@ TODO
 - implement with ZMQ for async...? 
     - problem isn't with the streaming, but the plot updates? 
 
+<!-- Plotting speedup ideas -->
+- biggest time hogs:
+    - clearing and replotting the entire graph (clear + plot)
+        - can we keep most of the plot intact and just set the data? 
+    - auto-adjusting the range (requires calculations)
+        - set x and y ranges to a reasonable value, add a slider or something to adjust
+- (sampling frequency samples/sec) * (plot update interval sec) = number of samples per update
+- plot update bounded at 60Hz -- (samples/sec)/(updates/sec) = samples/update
+- https://stackoverflow.com/questions/40126176/fast-live-plotting-in-matplotlib-pyplot 
+
 <!-- FIX HARDCODING -->
 - change overall class structure so that acquisition devices are run differently 
     - user writes acquisition device subclass 
-
+- we will in essence have a socket-streaming data visualizer? 
+    - can we parse the protocol in a yaml or something
 
 <!-- RingBuffer -->
-- Changing this to a deque for some speedup 
+- X Changing this to a deque for some speedup 
 
 <!-- Multiprocessing.Queue -->
 - this seems to be slow, moving data across processes
@@ -36,11 +47,8 @@ TODO
     - conclusion: stick with Queue for now, it's the right abstraction... 
     - future problem: might need multiple queues for 
 
-<!-- PLotting speedup ideas -->
-- biggest time hogs:
-    - auto-adjusting the range (requires calculations)
-    - clearing and replotting the entire graph (clear + plot)
-        - can we keep most of the plot intact? 
+<!-- Dreams -->
+- make this web-based (replace Qt with javascript, but have a choice?)
 
 <!-- NOTES -->
 vSignals acquired with sessantaquattro can be read with a WiFi interface using a TCP connection.
@@ -54,6 +62,8 @@ The server-client role has been chosen to allow the connection of more sessantaq
 
 data_throughput
 (64 channels) X (2000 samples / 1 sec) X (16 bits / 1 sample) = 2,048,000bps = 2Mbps= 256kB/s
+
+320kbps is typical for music (~ x6)
 
 ~~
 
