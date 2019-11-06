@@ -6,16 +6,17 @@ from rtgraph.ui.popUp import PopUp
 from rtgraph.common.logger import Logger as Log
 
 TAG = "MainWindow"
-FREQ = 2000  #Hz
-TIME = 10  #secs
+TIME = 10
 
 
-# samples = FREQ*TIME
 class MainWindow(QtGui.QMainWindow):
     """
     Handles the ui elements and connects to worker service to execute processes.
     """
-    def __init__(self, port=None, bd=115200, samples=FREQ * TIME):
+    def __init__(self,
+                 port=None,
+                 bd=115200,
+                 samples=Constants.argument_default_samples):
         """
         Initializes values for the UI.
         :param port: Default port name to be used. It will also disable scanning available ports.
@@ -42,6 +43,9 @@ class MainWindow(QtGui.QMainWindow):
         self._configure_plot()
         self._configure_timers()
         self._configure_signals()
+
+        import numpy as np
+        self._time_array = np.linspace(-10, 0, samples)
 
         # populate combo box for serial ports
         self._source_changed()
@@ -165,9 +169,8 @@ class MainWindow(QtGui.QMainWindow):
         """
 
         self.worker.consume_queue()
-        time = self.worker.get_time_buffer()
-        last_time = time[0]
-        time = [t - last_time for t in time]
+        num_times = len(self.worker.get_time_buffer())
+        time = self._time_array[-num_times:]
         # plot data
         for idx in range(Constants.default_num_lines):
             data = self.worker.get_values_buffer(idx)

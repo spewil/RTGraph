@@ -104,12 +104,13 @@ class Worker:
         Empties the internal queue, updating data to consumers.
         :return:
         """
-        i = 0
+        # i = 0
         while True:
             try:
+                # i += 1
                 self._store_data(self._queue.get(block=False))
-                i += 1
             except queue.Empty:
+                # print("parsed queue: ", i)
                 return
         Log.d(TAG, f"queue len: {i}")
 
@@ -134,17 +135,16 @@ class Worker:
         """
         # detect how many lines are present to plot
         size = len(values)
-        if self._lines < size:
-            if size > Constants.plot_max_lines:
-                print("oversize: ", size)
-                self._lines = Constants.plot_max_lines
-            else:
-                self._lines = size
+        # if self._lines < size:
+        #     if size > Constants.plot_max_lines:
+        #         print("oversize: ", size)
+        #         self._lines = Constants.plot_max_lines
+        #     else:
+        #         self._lines = size
 
         # store the data in respective buffers
         # NOTE: these buffers appear to be SLOW
-        for idx in range(self._lines):
-            # this truncates the data
+        for idx in range(size):
             self._data_buffers[idx].append(values[idx])
 
     def get_time_buffer(self):

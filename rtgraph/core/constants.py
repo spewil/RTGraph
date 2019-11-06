@@ -44,12 +44,12 @@ class Constants:
 
     # starting value for the y range of the plot
     # change this if actual data deviates?
-    plot_y_max = 100
+    plot_y_max = 70
 
     process_join_timeout_ms = 1000
 
     default_freq = 2000  # Hz
-    default_time = 10  # secs
+    default_time = 5  # secs
     argument_default_samples = default_freq * default_time
 
     serial_default_speed = 115200

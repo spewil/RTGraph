@@ -75,12 +75,14 @@ class ParserProcess(mp.Process):
         Used in run method to recall after a stop is requested, to ensure queue is emptied.
         :return:
         """
-        while True:  #not self._in_queue.empty():
+        # i = 0
+        while True:
             try:
+                # i += 1
                 packet = self._in_queue.get(block=False)
-                #    ,timeout=self._consumer_timeout)
                 self._parse_queue(packet)
             except queue.Empty:
+                # print("unparsed queue: ", i)
                 return
 
     def _parse_queue(self, packet):
@@ -96,7 +98,6 @@ class ParserProcess(mp.Process):
         data = packet.split("\n")
         if len(self._leftover) > 0:
             data[0] = self._leftover + data[0]
-            print("recombined")
         for datum in data:
             try:
                 datapoint = json.loads(datum)

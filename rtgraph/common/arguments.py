@@ -4,7 +4,6 @@ from rtgraph.common.logger import Logger as Log
 from rtgraph.common.logger import LoggerLevel
 from rtgraph.core.constants import Constants
 
-
 TAG = "Arguments"
 
 
@@ -20,31 +19,33 @@ class Arguments:
         Creates and parses the arguments to be used by the application.
         :return:
         """
-        parser = argparse.ArgumentParser(description='RTGraph\nA real time plotting and logging application')
-        parser.add_argument("-i", "--info",
+        parser = argparse.ArgumentParser(
+            description='RTGraph\nA real time plotting and logging application'
+        )
+        parser.add_argument("-i",
+                            "--info",
                             dest="log_level_info",
                             action='store_true',
-                            help="Enable info messages"
-                            )
+                            help="Enable info messages")
 
-        parser.add_argument("-d", "--debug",
+        parser.add_argument("-d",
+                            "--debug",
                             dest="log_level_debug",
                             action='store_true',
-                            help="Enable debug messages"
-                            )
+                            help="Enable debug messages")
 
-        parser.add_argument("-v", "--verbose",
+        parser.add_argument("-v",
+                            "--verbose",
                             dest="log_to_console",
                             action='store_true',
                             help="Show log messages in console",
-                            default=Constants.log_default_console_log
-                            )
+                            default=Constants.log_default_console_log)
 
-        parser.add_argument("-s", "--samples",
+        parser.add_argument("-s",
+                            "--samples",
                             dest="user_samples",
                             default=Constants.argument_default_samples,
-                            help="Specify number of sample to show on plot"
-                            )
+                            help="Specify number of sample to show on plot")
         self._parser = parser.parse_args()
 
     def set_user_log_level(self):

@@ -13,9 +13,7 @@ to access individual elements of the array
 class RingBuffer():
     def __init__(self, size_max):
 
-        self._data = collections.deque([0 for _ in range(size_max)],
-                                       maxlen=size_max)
-        self.size = 0
+        self._data = collections.deque([0], maxlen=size_max)
 
     def append(self, value):
         """
@@ -23,7 +21,6 @@ class RingBuffer():
         :param value:
         """
         self._data.appendleft(value)
-        self.size += 1
 
     def get_all(self):
         """
